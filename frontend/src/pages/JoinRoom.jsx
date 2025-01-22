@@ -8,6 +8,7 @@ export default function JoinRoom() {
     const [roomJoined, setRoomJoined] = useState(false);
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
+    const [roomFull, setRoomFull] = useState(false);
 
     useEffect(() => {
         // Initialize the socket connection
@@ -37,6 +38,11 @@ export default function JoinRoom() {
             console.log("Room joined successfully:", data);
             setRoomJoined(true);
         });
+
+        socket.on("roomFull", (data) => {
+            console.log(`Room ${data} is full`);
+            setRoomFull(true);
+        })
     }
 
     function sendMessage() {
