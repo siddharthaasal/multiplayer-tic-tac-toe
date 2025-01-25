@@ -35,6 +35,14 @@ export default class Room {
         return this.players.length;
     }
 
+    getPlayers() {
+        return this.players;
+    }
+
+    getGameState() {
+        return this.gameState;
+    }
+
     initializeGameState() {
         this.gameState = {
             board: [["", "", ""], ["", "", ""], ["", "", ""]],
@@ -48,7 +56,7 @@ export default class Room {
 
     toss() {
         let i = Math.floor(Math.random() * 2);
-        return this.players[i];
+        return i
     }
 
 }

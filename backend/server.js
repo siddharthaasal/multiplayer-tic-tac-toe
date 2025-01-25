@@ -57,7 +57,9 @@ io.on('connection', (socket) => {
         if (room.numberOfPlayers() === 2) {
             room.initializeGameState();
             console.log(`Room full, start the game`);
-            io.to(roomId).emit("startGame", { message: "Game Starting!" });
+            let players = room.getPlayers();
+            let gameState = room.getGameState();
+            io.to(roomId).emit("startGame", { players, gameState });
         }
     });
 
