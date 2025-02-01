@@ -28,12 +28,6 @@ io.on('connection', (socket) => {
 
     console.log(`User ${socket.id} connected.`);
 
-    //deprecated
-    socket.on('createRoom', ({ roomId }) => {
-        console.log('Request to create room with id: ' + roomId);
-        socket.join(roomId);
-        socket.emit("roomCreated", { roomId });
-    });
 
     socket.on('joinRoom', ({ roomId }) => {
 

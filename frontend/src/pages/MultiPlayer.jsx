@@ -20,9 +20,6 @@ export default function MultiPlayer() {
                     <li>
                         <Link to="/join-room">Join Room</Link>
                     </li>
-                    <li>
-                        <Link to="/create-room">Create Room</Link>
-                    </li>
                 </ul>
             </nav>
         </>
