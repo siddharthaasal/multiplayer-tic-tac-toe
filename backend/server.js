@@ -38,18 +38,20 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', ({ roomId }) => {
 
         console.log('Request to join room with id: ' + roomId);
-
         let room = roomManager.getRoom(roomId);
         if (!room) {
             room = roomManager.createRoom(roomId);
         }
 
         if (!room.addPlayer(socket.id)) {
+            console.log(`Cannot add player ${socket.id} in room ${roomId} because it is already full :(`);
             socket.emit("roomFull", { roomId })
             return;
         }
 
         socket.join(roomId);
+        console.log("After joining Rooms in the Room Manager class: ", roomManager.rooms);
+        // roomManager.rooms.push(room);
         console.log(`Player ${socket.id} has joined the room ${roomId}`)
         io.to(roomId).emit("roomJoined", { roomId }); //improve
 
@@ -62,6 +64,50 @@ io.on('connection', (socket) => {
             io.to(roomId).emit("startGame", { players, gameState });
         }
     });
+
+    socket.on('playerMove', ({ roomId, rowIndex, colIndex }) => {
+        let room = roomManager.getRoom(roomId);
+        if (!room) {
+            console.log("Invalid Room Id");
+            return;
+        }
+
+        // Ensure the game state is initialized
+        let gameState = room.getGameState();
+        if (!gameState) {
+            console.log("Game state is uninitialized for this room.");
+            return;
+        }
+
+        // Check for invalid move
+        if (rowIndex > 2 || colIndex > 2 || rowIndex < 0 || colIndex < 0) {
+            console.log("Invalid Move: Out of bounds");
+            return;
+        }
+        if (gameState.grid[rowIndex][colIndex] !== "") {
+            console.log("Invalid Move: Cell already occupied");
+            return;
+        }
+
+        // All good, process the move
+        console.log("Grid before move:", gameState.grid);
+
+        let symbol = gameState.currentTurn == 0 ? "X" : "O";
+        gameState.grid[rowIndex][colIndex] = symbol;
+        gameState.currentTurn = 1 - gameState.currentTurn;
+        room.updateGameState(gameState);
+
+        console.log("Grid after move:", gameState.grid);
+        if (checkWinner(gameState.grid) === "winner") {
+            let winnerIdx = 1 - gameState.currentTurn;
+            io.to(roomId).emit("gameEnded", { gameState, winnerIdx });
+        } else if (checkWinner(gameState.grid) === "draw") {
+            io.to(roomId).emit("gameDraw", gameState);
+        } else {
+            io.to(roomId).emit("updateGameState", gameState);
+        }
+    });
+
 
 
     socket.on("disconnect", (socket) => {
@@ -91,3 +137,32 @@ io.on('connection', (socket) => {
 });
 
 
+//helper functions
+
+function checkWinner(grid) {
+    const winningLines = [
+        // Rows
+        [grid[0][0], grid[0][1], grid[0][2]],
+        [grid[1][0], grid[1][1], grid[1][2]],
+        [grid[2][0], grid[2][1], grid[2][2]],
+        // Columns
+        [grid[0][0], grid[1][0], grid[2][0]],
+        [grid[0][1], grid[1][1], grid[2][1]],
+        [grid[0][2], grid[1][2], grid[2][2]],
+        // Diagonals
+        [grid[0][0], grid[1][1], grid[2][2]],
+        [grid[0][2], grid[1][1], grid[2][0]],
+    ];
+
+    // Check if there's a winner
+    if (winningLines.some(line => line.every(cell => cell === "X") || line.every(cell => cell === "O"))) {
+        return "winner";
+    }
+
+    // Check for draw: If all cells are filled and no winner
+    if (grid.flat().every(cell => cell !== "")) {
+        return "draw";
+    }
+
+    return null; // Game still ongoing
+}

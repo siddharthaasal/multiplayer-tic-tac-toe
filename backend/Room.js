@@ -6,7 +6,6 @@ export default class Room {
     }
 
     addPlayer(socketId) {
-
         if (this.players.some((player) => player === socketId)) {
             console.log(`Player ${socketId} already in the room.`);
             return false; // Prevent duplicate entries
@@ -15,12 +14,19 @@ export default class Room {
         if (this.numberOfPlayers() < 2) {
             console.log(`Player ${socketId} added to room ${this.roomId}.`);
             this.players.push(socketId);
+
+            // Initialize game state if both players are present
+            if (this.numberOfPlayers() === 2 && !this.gameState) {
+                this.initializeGameState();
+            }
+
             return true;
         } else {
             console.log(`Room ${this.roomId} is full.`);
             return false;
         }
     }
+
 
     removePlayer(socketId) {
         this.players = this.players.filter((player) => player !== socketId)
@@ -45,13 +51,13 @@ export default class Room {
 
     initializeGameState() {
         this.gameState = {
-            board: [["", "", ""], ["", "", ""], ["", "", ""]],
+            grid: Array(3).fill("").map(() => Array(3).fill("")),
             currentTurn: this.toss(),
         };
     }
 
-    getGameState() {
-        return this.gameState;
+    updateGameState(gameState) {
+        this.gameState = gameState;
     }
 
     toss() {

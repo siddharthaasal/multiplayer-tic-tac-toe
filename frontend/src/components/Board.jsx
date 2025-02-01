@@ -1,88 +1,52 @@
 import "../styles/Board.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function Board(props) {
+export default function Board({ socket, roomId, users, state }) {
 
     const [grid, setGrid] = useState(Array(3).fill("").map(() => Array(3).fill("")));
-    const [players, setPlayers] = useState(props.players);
-    const [gameState, setGameState] = useState(props.gameState);
-    const [currentPlayerIdx, setCurrentPlayerIdx] = useState(props.gameState.currentTurn);
-    const [currentSymbol, setCurrentSymbol] = useState("X");
-    const [numberOfTurns, setNumberOfTurns] = useState(0);
+    const [players, setPlayers] = useState(users);
+    const [gameState, setGameState] = useState(state);
+    const [currentTurn, setCurrentTurn] = useState(gameState.currentTurn);
     const [gameEnded, setGameEnded] = useState(false);
-    const [winnerIdx, setWinnerIdx] = useState(-1);
+    const [winner, setWinner] = useState(null);
+
+    useEffect(
+        () => {
+            console.log("Current turn is of player ", players[currentTurn]);
+            socket.on("updateGameState", (gameState) => {
+                setGrid(gameState.grid);
+                setCurrentTurn(gameState.currentTurn);
+            })
+
+            socket.on("gameEnded", ({ gameState, winnerIdx }) => {
+                setGrid(gameState.grid)
+                setGameEnded(true);
+                setWinner(players[winnerIdx]);
+                setCurrentTurn(-1);
+
+            })
+
+            socket.on("gameDraw", (gameState) => {
+                setGrid(gameState.grid);
+                setGameEnded(true);
+                setCurrentTurn(-1);
+            })
+        },
+        [socket]
+    );
 
     function handleClick(rowIndex, colIndex) {
-        if (grid[rowIndex][colIndex] != "") {
-            alert("Invalid Move")
-            return;
-        }
         if (gameEnded) {
-            alert("Game Ended")
             return;
         }
 
-        //the cell is empty
-        const newGrid = grid.map((row, rIdx) =>
-            row.map((cell, cIdx) =>
-                (rIdx === rowIndex && cIdx === colIndex) ? currentSymbol : cell
-            )
-        );
-        setGrid(newGrid);
-        console.log(newGrid);
-        setNumberOfTurns((prevTurns) => prevTurns + 1);
-        checkWinner(newGrid);
-        checkDraw();
-        hasGameEnded();
-        setCurrentSymbol(toggleCurrentSymbol);
-        setCurrentPlayerIdx(toggleCurrentPlayerIdx);
-    }
-
-    function toggleCurrentSymbol() {
-        (currentSymbol === "X") ? setCurrentSymbol("O") : setCurrentSymbol("X");
-    }
-
-    function toggleCurrentPlayerIdx() {
-        (currentPlayerIdx === 0) ? setCurrentPlayerIdx(1) : setCurrentPlayerIdx(0);
-    }
-
-    function hasGameEnded() {
-        if (numberOfTurns === 9) {
-            setGameEnded(true);
+        if (socket.id !== players[currentTurn]) {
+            console.log("Not your turn");
+            alert("Not your turn");
+            return;
         }
-    }
-
-    function checkWinner(grid) {
-        //winning lines
-        const winningLines = [
-            // Rows
-            [grid[0][0], grid[0][1], grid[0][2]],
-            [grid[1][0], grid[1][1], grid[1][2]],
-            [grid[2][0], grid[2][1], grid[2][2]],
-            // Columns
-            [grid[0][0], grid[1][0], grid[2][0]],
-            [grid[0][1], grid[1][1], grid[2][1]],
-            [grid[0][2], grid[1][2], grid[2][2]],
-            // Diagonals
-            [grid[0][0], grid[1][1], grid[2][2]],
-            [grid[0][2], grid[1][1], grid[2][0]],
-        ];
-        for (let line of winningLines) {
-            if (line.every((cell) => cell === "X") || line.every((cell) => cell === "O")) {
-                console.log("Winner!")
-                setGameEnded(true);
-                console.log(`Player ${players[currentPlayerIdx]} wins!`);
-                setWinnerIdx(currentPlayerIdx);
-            }
-        }
-    }
-
-
-    function checkDraw() {
-        if (!gameEnded && numberOfTurns === 9) {
-            console.log("It's a draw!");
-            setGameEnded(true);
-            setWinnerIdx(-1);
+        if (!gameEnded) {
+            socket.emit("playerMove", { roomId, rowIndex, colIndex });
         }
     }
 
@@ -91,22 +55,28 @@ export default function Board(props) {
             <div className="board">
                 {grid.map((row, rowIndex) =>
                     row.map((cell, colIndex) => (
-                        <div key={`${rowIndex}-${colIndex}`} className="cell"
-                            onClick={() => handleClick(rowIndex, colIndex)}>
+                        <div
+                            key={`${rowIndex}-${colIndex}`}
+                            className="cell"
+                            onClick={() => handleClick(rowIndex, colIndex)}
+                        >
                             {cell}
                         </div>
                     ))
                 )}
-            </div >
-            {gameEnded && (
-                <h1>
-                    {winnerIdx === -1
-                        ? "It's a draw!"
-                        : `Winner!`
-                    }
-                    {/* Player ${players[winnerIdx]} (${winnerIdx === 0 ? "X" : "O"}) wins!`} */}
-                </h1>
-            )}
+                {
+                    (socket.id === players[currentTurn]) && (
+                        <p>Your Turn</p>
+                    )
+                }
+
+            </div>
+
+            {
+                gameEnded && (
+                    <h2>{winner ? `Player ${winner} wins!` : "Draw!"}</h2>
+                )
+            }
         </>
     )
 }   

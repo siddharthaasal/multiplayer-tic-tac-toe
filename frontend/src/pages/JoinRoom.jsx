@@ -68,6 +68,7 @@ export default function JoinRoom() {
         setMessage("");
     }
 
+
     return (
         <>
             {
@@ -113,8 +114,10 @@ export default function JoinRoom() {
                     {
                         gameStarted &&
                         <Board
-                            players={players}
-                            gameState={gameState}
+                            socket={socket}
+                            roomId={roomId}
+                            users={players}
+                            state={gameState}
                         />
                     }
                 </>
