@@ -87,38 +87,51 @@ export default function JoinRoom() {
 
             {roomJoined && (
                 <>
-                    <p>Welcome to room {roomId}</p>
-                    <div
-                        style={{
-                            border: "1px solid black",
-                            padding: "10px",
-                            height: "200px",
-                            overflowY: "auto",
-                            marginBottom: "10px",
-                        }}
-                    >
-                        {messages.map((msg, index) => (
-                            <p key={index}>{msg}</p>
-                        ))}
-                    </div>
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Type Message"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                        />
-                        <button onClick={sendMessage}>Send</button>
-                    </div>
+                    <h4>Welcome {socket.id} to Room {roomId}</h4>
+
+
+
+
 
                     {
                         gameStarted &&
-                        <Board
-                            socket={socket}
-                            roomId={roomId}
-                            users={players}
-                            state={gameState}
-                        />
+                        (
+
+                            <div style={{ display: "flex", margin: "50px", gap: "50px" }}>
+                                <Board
+                                    socket={socket}
+                                    roomId={roomId}
+                                    users={players}
+                                    state={gameState}
+                                />
+                                {/* chatbox */}
+                                <div>
+                                    <div
+                                        style={{
+                                            border: "1px solid black",
+                                            padding: "10px",
+                                            height: "200px",
+                                            overflowY: "auto",
+                                            marginBottom: "10px",
+                                        }}
+                                    >
+                                        {messages.map((msg, index) => (
+                                            <p key={index}>{msg}</p>
+                                        ))}
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder="Type Message"
+                                            value={message}
+                                            onChange={(e) => setMessage(e.target.value)}
+                                        />
+                                        <button onClick={sendMessage}>Send</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+
                     }
                 </>
             )}
