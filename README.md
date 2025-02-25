@@ -21,6 +21,7 @@ cd multiplayer-tic-tac-toe
 cd frontend/
 npm install
 npm start
+npx @tailwindcss/cli -i ./src/index.css -o ./src/output.css --watch
 ```
 > The React app will start on `http://localhost:3000`
 

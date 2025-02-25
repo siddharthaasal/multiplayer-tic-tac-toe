@@ -31,6 +31,7 @@ export default class Room {
     removePlayer(socketId) {
         this.players = this.players.filter((player) => player !== socketId)
         console.log(`Player ${socketId} removed from room ${this.roomId}.`);
+        console.log("Number of players now: ", this.numberOfPlayers());
         if (this.numberOfPlayers() === 0) {
             console.log(`Room ${this.roomId} is now empty.`);
             // Consider removing the room from a global rooms list

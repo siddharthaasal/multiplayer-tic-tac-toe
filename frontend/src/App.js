@@ -11,14 +11,7 @@ const App = () => {
 
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}></Route>
-          <Route path="/multi-player" element={<MultiPlayer />}></Route>
-          <Route path="/single-player" element={<SinglePlayer />}></Route>
-          <Route path="/join-room" element={<JoinRoom />}></Route>
-        </Routes>
-      </BrowserRouter>
+      <Home />
     </>
   );
 };
